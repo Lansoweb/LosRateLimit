@@ -1,13 +1,11 @@
 <?php
+
 namespace LosMiddlewareTest\RateLimit;
 
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
 use LosMiddleware\RateLimit\RateLimit;
-use LosMiddleware\RateLimit\Storage\ZendSessionStorage;
-use Zend\Session\Storage\ArrayStorage;
 use Zend\Session\Container;
-use Zend\Session\SessionManager;
 use LosMiddleware\RateLimit\Storage\AuraSessionStorage;
 use Aura\Session\SessionFactory;
 use Zend\ServiceManager\ServiceManager;
@@ -16,7 +14,6 @@ use LosMiddleware\RateLimit\RateLimitFactory;
 
 class RateLimitTest extends \PHPUnit_Framework_TestCase
 {
-
     protected $middleware;
 
     protected function setUp()
@@ -26,7 +23,7 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
             'los_rate_limit' => [
                 'max_requests' => 2,
                 'reset_time' => 10,
-            ]
+            ],
         ]);
         $factory = new RateLimitFactory();
         $this->middleware = $factory($container);
@@ -37,7 +34,7 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
         $request = new ServerRequest();
         $response = new Response();
 
-        $outFunction = function ($request, $response)  {
+        $outFunction = function ($request, $response) {
             return $response;
         };
 
@@ -58,7 +55,7 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
         $request = new ServerRequest();
         $response = new Response();
 
-        $outFunction = function ($request, $response)  {
+        $outFunction = function ($request, $response) {
             return $response;
         };
 
@@ -75,7 +72,7 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
         $request = new ServerRequest();
         $response = new Response();
 
-        $outFunction = function ($request, $response)  {
+        $outFunction = function ($request, $response) {
             return $response;
         };
 
@@ -98,7 +95,7 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
         $request = new ServerRequest();
         $response = new Response();
 
-        $outFunction = function ($request, $response)  {
+        $outFunction = function ($request, $response) {
             return $response;
         };
 
@@ -127,7 +124,7 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
         $request = new ServerRequest();
         $response = new Response();
 
-        $outFunction = function ($request, $response)  {
+        $outFunction = function ($request, $response) {
             return $response;
         };
 

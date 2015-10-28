@@ -38,9 +38,8 @@ class RateLimit
             $created = time();
         } else {
             //Keeps phpunit happy ...
-            $remaining  = $remaining - 1;
+            $remaining = $remaining - 1;
         }
-
 
         $resetIn = ($created + $this->resetTime) - time();
 

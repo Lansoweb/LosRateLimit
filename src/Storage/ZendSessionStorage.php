@@ -23,6 +23,7 @@ class ZendSessionStorage implements StorageInterface
         if (!$this->container->offsetExists($key)) {
             return $default;
         }
+
         return $this->container->offsetGet($key, $default);
     }
 
