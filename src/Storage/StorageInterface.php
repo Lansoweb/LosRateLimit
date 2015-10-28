@@ -1,8 +1,8 @@
 <?php
-namespace LosRateLimit\Storage;
+namespace LosMiddleware\RateLimit\Storage;
 
 interface StorageInterface
 {
-    public function read($key);
-    public function write($key, $value, $expire = 0);
+    public function get($key, $default = 0);
+    public function set($key, $value);
 }
