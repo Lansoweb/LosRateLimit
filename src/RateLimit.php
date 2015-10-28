@@ -1,9 +1,9 @@
 <?php
-namespace LosMiddleware\RateLimit;
+namespace LosRateLimit;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use LosMiddleware\RateLimit\Storage\StorageInterface;
+use LosRateLimit\Storage\StorageInterface;
 
 class RateLimit
 {

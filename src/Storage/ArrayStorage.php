@@ -1,7 +1,7 @@
 <?php
-namespace LosMiddleware\Storage;
+namespace LosRateLimit\Storage;
 
-use LosMiddleware\RateLimit\Storage\StorageInterface;
+use LosRateLimit\Storage\StorageInterface;
 
 class ArrayStorage implements StorageInterface
 {
