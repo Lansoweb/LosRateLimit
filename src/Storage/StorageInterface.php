@@ -1,4 +1,5 @@
 <?php
+
 namespace LosMiddleware\RateLimit\Storage;
 
 interface StorageInterface

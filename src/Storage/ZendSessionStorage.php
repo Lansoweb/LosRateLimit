@@ -1,11 +1,11 @@
 <?php
+
 namespace LosMiddleware\RateLimit\Storage;
 
 use Zend\Session\Container;
 
 class ZendSessionStorage implements StorageInterface
 {
-
     private $container;
 
     public function __construct(Container $container)
@@ -14,19 +14,20 @@ class ZendSessionStorage implements StorageInterface
     }
 
     /**
-     *
-     * {@inheritDoc}
+     * {@inheritdoc}
      *
      * @see \LosMiddleware\RateLimit\Storage\StorageInterface::get()
      */
     public function get($key, $default = 0)
     {
+        if (!$this->container->offsetExists($key)) {
+            return $default;
+        }
         return $this->container->offsetGet($key, $default);
     }
 
     /**
-     *
-     * {@inheritDoc}
+     * {@inheritdoc}
      *
      * @see \LosMiddleware\RateLimit\Storage\StorageInterface::set()
      */

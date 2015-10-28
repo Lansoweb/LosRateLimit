@@ -1,4 +1,5 @@
 <?php
+
 namespace LosMiddleware\RateLimit;
 
 use Psr\Http\Message\ResponseInterface;
@@ -7,8 +8,8 @@ use LosMiddleware\RateLimit\Storage\StorageInterface;
 
 class RateLimit
 {
-    const HEADER_LIMIT     = 'X-Rate-Limit-Limit';
-    const HEADER_RESET     = 'X-Rate-Limit-Reset';
+    const HEADER_LIMIT = 'X-Rate-Limit-Limit';
+    const HEADER_RESET = 'X-Rate-Limit-Reset';
     const HEADER_REMAINING = 'X-Rate-Limit-Remaining';
 
     private $storage;
@@ -35,9 +36,11 @@ class RateLimit
 
         if ($created == 0) {
             $created = time();
+        } else {
+            //Keeps phpunit happy ...
+            $remaining  = $remaining - 1;
         }
 
-        $remaining--;
 
         $resetIn = ($created + $this->resetTime) - time();
 
@@ -48,7 +51,8 @@ class RateLimit
         }
 
         if ($remaining <= 0) {
-            $response = $response->withHeader(self::HEADER_RESET, (string)$resetIn);
+            $response = $response->withHeader(self::HEADER_RESET, (string) $resetIn);
+
             return $response->withStatus(429);
         }
 
@@ -56,10 +60,9 @@ class RateLimit
         $this->storage->set('created', $created);
 
         $response = $next($request, $response);
-
-        $response = $response->withHeader(self::HEADER_REMAINING, (string)$remaining);
-        $response = $response->withHeader(self::HEADER_LIMIT, (string)$this->maxRequests);
-        $response = $response->withHeader(self::HEADER_RESET, (string)$resetIn);
+        $response = $response->withHeader(self::HEADER_REMAINING, (string) $remaining);
+        $response = $response->withAddedHeader(self::HEADER_LIMIT, (string) $this->maxRequests);
+        $response = $response->withAddedHeader(self::HEADER_RESET, (string) $resetIn);
 
         return $next($request, $response);
     }

@@ -1,11 +1,11 @@
 <?php
+
 namespace LosMiddleware\RateLimit\Storage;
 
 use Aura\Session\Segment;
 
-class ZendSessionStorage implements StorageInterface
+class AuraSessionStorage implements StorageInterface
 {
-
     private $container;
 
     public function __construct(Segment $container)
@@ -14,8 +14,7 @@ class ZendSessionStorage implements StorageInterface
     }
 
     /**
-     *
-     * {@inheritDoc}
+     * {@inheritdoc}
      *
      * @see \LosMiddleware\RateLimit\Storage\StorageInterface::get()
      */
@@ -25,8 +24,7 @@ class ZendSessionStorage implements StorageInterface
     }
 
     /**
-     *
-     * {@inheritDoc}
+     * {@inheritdoc}
      *
      * @see \LosMiddleware\RateLimit\Storage\StorageInterface::set()
      */
