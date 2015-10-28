@@ -9,7 +9,7 @@ before_install:
   - composer self-update
       
 before_script:
-  - phpenv config-add .ci/php.ini || return 0
+  - echo "extension = apc.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
         
 env:
   global:
