@@ -6,11 +6,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use LosMiddleware\RateLimit\Storage\StorageInterface;
 
-class RateLimit
+class RateLimit implements RateLimitInterface
 {
-    const HEADER_LIMIT = 'X-Rate-Limit-Limit';
-    const HEADER_RESET = 'X-Rate-Limit-Reset';
-    const HEADER_REMAINING = 'X-Rate-Limit-Remaining';
 
     private $storage;
     private $maxRequests = 100;
@@ -50,7 +47,7 @@ class RateLimit
         }
 
         if ($remaining <= 0) {
-            $response = $response->withHeader(self::HEADER_RESET, (string) $resetIn);
+            $response = $response->withHeader(RateLimitInterface::HEADER_RESET, (string) $resetIn);
 
             return $response->withStatus(429);
         }
@@ -59,9 +56,9 @@ class RateLimit
         $this->storage->set('created', $created);
 
         $response = $next($request, $response);
-        $response = $response->withHeader(self::HEADER_REMAINING, (string) $remaining);
-        $response = $response->withAddedHeader(self::HEADER_LIMIT, (string) $this->maxRequests);
-        $response = $response->withAddedHeader(self::HEADER_RESET, (string) $resetIn);
+        $response = $response->withHeader(RateLimitInterface::HEADER_REMAINING, (string) $remaining);
+        $response = $response->withAddedHeader(RateLimitInterface::HEADER_LIMIT, (string) $this->maxRequests);
+        $response = $response->withAddedHeader(RateLimitInterface::HEADER_RESET, (string) $resetIn);
 
         return $next($request, $response);
     }

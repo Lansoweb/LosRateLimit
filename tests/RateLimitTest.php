@@ -11,6 +11,9 @@ use Aura\Session\SessionFactory;
 use Zend\ServiceManager\ServiceManager;
 use Zend\ServiceManager\Config;
 use LosMiddleware\RateLimit\RateLimitFactory;
+use LosMiddleware\RateLimit\RateLimitInterface;
+use LosMiddleware\RateLimit\Storage\ArrayStorage;
+use LosMiddleware\RateLimit\Storage\ApcStorage;
 
 class RateLimitTest extends \PHPUnit_Framework_TestCase
 {
@@ -41,13 +44,13 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
         $result = call_user_func($this->middleware, $request, $response, $outFunction);
 
         $this->assertNotSame($response, $result);
-        $this->assertArrayHasKey(RateLimit::HEADER_REMAINING, $result->getHeaders());
-        $this->assertArrayHasKey(RateLimit::HEADER_LIMIT, $result->getHeaders());
-        $this->assertArrayHasKey(RateLimit::HEADER_RESET, $result->getHeaders());
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_REMAINING, $result->getHeaders());
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_LIMIT, $result->getHeaders());
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_RESET, $result->getHeaders());
 
-        $this->assertEquals(2, $result->getHeader(RateLimit::HEADER_REMAINING)[0]);
-        $this->assertLessThanOrEqual(10, $result->getHeader(RateLimit::HEADER_RESET)[0]);
-        $this->assertEquals(2, $result->getHeader(RateLimit::HEADER_LIMIT)[0]);
+        $this->assertEquals(2, $result->getHeader(RateLimitInterface::HEADER_REMAINING)[0]);
+        $this->assertLessThanOrEqual(10, $result->getHeader(RateLimitInterface::HEADER_RESET)[0]);
+        $this->assertEquals(2, $result->getHeader(RateLimitInterface::HEADER_LIMIT)[0]);
     }
 
     public function testDecreaseRemaining()
@@ -62,9 +65,9 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
         $result = call_user_func($this->middleware, $request, $response, $outFunction);
         $result = call_user_func($this->middleware, $request, $response, $outFunction);
 
-        $this->assertEquals(1, $result->getHeader(RateLimit::HEADER_REMAINING)[0]);
-        $this->assertLessThanOrEqual(10, $result->getHeader(RateLimit::HEADER_RESET)[0]);
-        $this->assertEquals(2, $result->getHeader(RateLimit::HEADER_LIMIT)[0]);
+        $this->assertEquals(1, $result->getHeader(RateLimitInterface::HEADER_REMAINING)[0]);
+        $this->assertLessThanOrEqual(10, $result->getHeader(RateLimitInterface::HEADER_RESET)[0]);
+        $this->assertEquals(2, $result->getHeader(RateLimitInterface::HEADER_LIMIT)[0]);
     }
 
     public function testGenerate429()
@@ -80,9 +83,9 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
         $result = call_user_func($this->middleware, $request, $response, $outFunction);
         $result = call_user_func($this->middleware, $request, $response, $outFunction);
 
-        $this->assertArrayNotHasKey(RateLimit::HEADER_REMAINING, $result->getHeaders());
-        $this->assertArrayNotHasKey(RateLimit::HEADER_LIMIT, $result->getHeaders());
-        $this->assertLessThanOrEqual(10, $result->getHeader(RateLimit::HEADER_RESET)[0]);
+        $this->assertArrayNotHasKey(RateLimitInterface::HEADER_REMAINING, $result->getHeaders());
+        $this->assertArrayNotHasKey(RateLimitInterface::HEADER_LIMIT, $result->getHeaders());
+        $this->assertLessThanOrEqual(10, $result->getHeader(RateLimitInterface::HEADER_RESET)[0]);
         $this->assertSame(429, $result->getStatusCode());
     }
 
@@ -101,9 +104,9 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
 
         $result = call_user_func($this->middleware, $request, $response, $outFunction);
 
-        $this->assertArrayHasKey(RateLimit::HEADER_REMAINING, $result->getHeaders());
-        $this->assertArrayHasKey(RateLimit::HEADER_LIMIT, $result->getHeaders());
-        $this->assertLessThanOrEqual(10, $result->getHeader(RateLimit::HEADER_RESET)[0]);
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_REMAINING, $result->getHeaders());
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_LIMIT, $result->getHeaders());
+        $this->assertLessThanOrEqual(10, $result->getHeader(RateLimitInterface::HEADER_RESET)[0]);
     }
 
     public function testUseAuraSession()
@@ -131,12 +134,75 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
         $result = call_user_func($this->middleware, $request, $response, $outFunction);
 
         $this->assertNotSame($response, $result);
-        $this->assertArrayHasKey(RateLimit::HEADER_REMAINING, $result->getHeaders());
-        $this->assertArrayHasKey(RateLimit::HEADER_LIMIT, $result->getHeaders());
-        $this->assertArrayHasKey(RateLimit::HEADER_RESET, $result->getHeaders());
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_REMAINING, $result->getHeaders());
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_LIMIT, $result->getHeaders());
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_RESET, $result->getHeaders());
 
-        $this->assertEquals(2, $result->getHeader(RateLimit::HEADER_REMAINING)[0]);
-        $this->assertLessThanOrEqual(10, $result->getHeader(RateLimit::HEADER_RESET)[0]);
-        $this->assertEquals(2, $result->getHeader(RateLimit::HEADER_LIMIT)[0]);
+        $this->assertEquals(2, $result->getHeader(RateLimitInterface::HEADER_REMAINING)[0]);
+        $this->assertLessThanOrEqual(10, $result->getHeader(RateLimitInterface::HEADER_RESET)[0]);
+        $this->assertEquals(2, $result->getHeader(RateLimitInterface::HEADER_LIMIT)[0]);
     }
+
+    public function testUseArrayStorage()
+    {
+        $this->middleware = new RateLimit(
+            new ArrayStorage(),
+            [
+                'max_requests' => 2,
+                'reset_time' => 10,
+            ]);
+
+        $request = new ServerRequest();
+        $response = new Response();
+
+        $outFunction = function ($request, $response) {
+            return $response;
+        };
+
+        $result = call_user_func($this->middleware, $request, $response, $outFunction);
+        $result = call_user_func($this->middleware, $request, $response, $outFunction);
+
+        $this->assertNotSame($response, $result);
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_REMAINING, $result->getHeaders());
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_LIMIT, $result->getHeaders());
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_RESET, $result->getHeaders());
+
+        $this->assertEquals(1, $result->getHeader(RateLimitInterface::HEADER_REMAINING)[0]);
+        $this->assertLessThanOrEqual(10, $result->getHeader(RateLimitInterface::HEADER_RESET)[0]);
+        $this->assertEquals(2, $result->getHeader(RateLimitInterface::HEADER_LIMIT)[0]);
+    }
+
+    public function testUseApcStorage()
+    {
+        if (!getenv('TESTS_APC_ENABLED')) {
+            $this->markTestSkipped('Enable TESTS_APC_ENABLED to run this test');
+        }
+
+        $this->middleware = new RateLimit(
+            new ApcStorage(true),
+            [
+                'max_requests' => 2,
+                'reset_time' => 10,
+            ]);
+
+        $request = new ServerRequest();
+        $response = new Response();
+
+        $outFunction = function ($request, $response) {
+            return $response;
+        };
+
+        $result = call_user_func($this->middleware, $request, $response, $outFunction);
+        $result = call_user_func($this->middleware, $request, $response, $outFunction);
+
+        $this->assertNotSame($response, $result);
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_REMAINING, $result->getHeaders());
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_LIMIT, $result->getHeaders());
+        $this->assertArrayHasKey(RateLimitInterface::HEADER_RESET, $result->getHeaders());
+
+        $this->assertEquals(1, $result->getHeader(RateLimitInterface::HEADER_REMAINING)[0]);
+        $this->assertLessThanOrEqual(10, $result->getHeader(RateLimitInterface::HEADER_RESET)[0]);
+        $this->assertEquals(2, $result->getHeader(RateLimitInterface::HEADER_LIMIT)[0]);
+    }
+
 }

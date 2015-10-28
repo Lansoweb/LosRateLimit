@@ -8,6 +8,13 @@ before_install:
   - wget http://get.sensiolabs.org/php-cs-fixer.phar
   - composer self-update
       
+before_script:
+  - phpenv config-add .ci/php.ini || return 0
+        
+env:
+  global:
+    - TESTS_APC_ENABLED=true
+          
 matrix:
   fast_finish: true
   include:
