@@ -8,7 +8,6 @@ use LosMiddleware\RateLimit\Storage\StorageInterface;
 
 class RateLimit implements RateLimitInterface
 {
-
     private $storage;
     private $maxRequests = 100;
     private $resetTime = 3600;

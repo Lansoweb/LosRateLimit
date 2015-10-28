@@ -1,4 +1,5 @@
 <?php
+
 namespace LosMiddleware\RateLimit;
 
 use Psr\Http\Message\ResponseInterface;

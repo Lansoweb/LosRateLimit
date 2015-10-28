@@ -22,6 +22,7 @@ class ApcStorage implements StorageInterface
         if (!apc_exists('los-rate-limit.'.$key)) {
             return $default;
         }
+
         return apc_fetch('los-rate-limit.'.$key);
     }
 

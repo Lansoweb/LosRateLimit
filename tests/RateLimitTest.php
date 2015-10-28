@@ -204,5 +204,4 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
         $this->assertLessThanOrEqual(10, $result->getHeader(RateLimitInterface::HEADER_RESET)[0]);
         $this->assertEquals(2, $result->getHeader(RateLimitInterface::HEADER_LIMIT)[0]);
     }
-
 }
