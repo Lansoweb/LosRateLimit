@@ -11,10 +11,6 @@ before_install:
 before_script:
   - echo "extension = apc.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
         
-env:
-  global:
-    - TESTS_APC_ENABLED=true
-          
 matrix:
   fast_finish: true
   include:
