@@ -4,17 +4,27 @@
 
 LosRateLimit is a php middleware to implement a rate limit.
 
+First, the middleware will look for an X-Api-Key header to use as key. If not found, it will fallback to the remote IP.
+
+Each one, has it's own limits (see configuration bellow).
+
+Attention! This middleware does not validate the Api Key, you must add a middleware before this one to validate it.
+
 ## Requirements
 
 * PHP >= 5.5
 * Psr\HttpMessage
 
-For Session, you can choose between:
-* Zend Session (default)
+This middleware uses one of the pre-implemented storages: 
+* Apc (default)
+* Array
 * Aura Session
+* File
+* Zend Session
+
+But you can implement your own, like a DB storage. Just implement the StorageInterface.
 
 ## Installation
-### Using composer (recommended)
 
 ```bash
 php composer.phar require los/los-rate-limit
@@ -25,10 +35,39 @@ php composer.phar require los/los-rate-limit
 'los_rate_limit' => [
     'max_requests' => 100,
     'reset_time' => 3600,
+    'ip_max_requests' => 100,
+    'ip_reset_time' => 3600,
+    'api_header' => 'X-Api-Key',
+    'trust_forwarded' => false,
 ]
 ```
 
-* `max_requests` How many requests are allowed before the reset time
-* `reset_time` After how many seconds the counter will be reset
+* `max_requests` How many requests are allowed before the reset time (using API Key)
+* `reset_time` After how many seconds the counter will be reset (using API Key)
+* `ip_max_requests` How many requests are allowed before the reset time (using remote IP Key)
+* `ip_reset_time` After how many seconds the counter will be reset (using remote IP Key)
+* `api_header` Header name to get the api key from.
+* `trust_forwarded` If the X-Forwarded (and similar) headers and be trusted. If not, only $_SERVER['REMOTE_ADDR'] will be used.
 
 The values above indicate that the user can trigger 100 requests per hour.
+
+If you want to disable ip access (e.g. allowing just access via X-Api-Key), just set ip_max_requests to 0 (zero).
+
+## Usage
+
+Just add the middleware as one of the first in your application. 
+
+### Zend Expressive
+
+Add a new entry in the pre_routing key:
+```php
+'middleware_pipeline' => [
+    'pre_routing' => [
+        [ 'middleware' => LosMiddleware\RateLimit\RateLimit::class ],
+        ...
+    ],
+    'post_routing' => [
+    ...
+    ],
+],    
+```  
