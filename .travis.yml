@@ -8,9 +8,6 @@ before_install:
   - wget http://get.sensiolabs.org/php-cs-fixer.phar
   - composer self-update
       
-before_script:
-  - echo "extension = apc.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-        
 matrix:
   fast_finish: true
   include:
