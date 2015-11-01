@@ -1,5 +1,6 @@
 <?php
-namespace Exception;
+
+namespace LosMiddleware\RateLimit\Exception;
 
 class MissingParameterException extends RateLimitException
 {

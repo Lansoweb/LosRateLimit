@@ -5,7 +5,7 @@ namespace LosMiddleware\RateLimit;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use LosMiddleware\RateLimit\Storage\StorageInterface;
-use Exception\MissingParameterException;
+use LosMiddleware\RateLimit\Exception\MissingParameterException;
 
 class RateLimit
 {
@@ -106,12 +106,12 @@ class RateLimit
             ];
         }
 
-        $remaining = array_key_exists('remaining', $data) ? (int)$data['remaining'] : $maxRequests;
-        $created = array_key_exists('created', $data) ? (int)$data['created'] : 0;
+        $remaining = array_key_exists('remaining', $data) ? (int) $data['remaining'] : $maxRequests;
+        $created = array_key_exists('created', $data) ? (int) $data['created'] : 0;
         if ($created == 0) {
             $created = time();
         } else {
-            $remaining--;
+            --$remaining;
         }
 
         if ($remaining < 0) {
@@ -120,11 +120,13 @@ class RateLimit
 
         $resetIn = ($created + $resetTime) - time();
 
+        // @codeCoverageIgnoreStart
         if ($resetIn <= 0) {
             $remaining = $maxRequests - 1;
             $created = time();
             $resetIn = $resetTime;
         }
+        // @codeCoverageIgnoreEnd
 
         $data['remaining'] = $remaining;
         $data['created'] = $created;

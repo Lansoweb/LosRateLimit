@@ -53,6 +53,7 @@ class FileStorage implements StorageInterface
             if ($localKey == $key) {
                 $file[$localKey] = $value;
                 file_put_contents($this->fileName, json_encode($file));
+
                 return;
             }
         }
