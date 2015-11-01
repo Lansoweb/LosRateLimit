@@ -13,7 +13,7 @@ before_script:
         
 env:
   global:
-    - TESTS_APC_ENABLED=true
+    - TESTS_APC_ENABLED=false
           
 matrix:
   fast_finish: true
