@@ -18,6 +18,9 @@ class ApcStorageTest extends \PHPUnit_Framework_TestCase
      */
     protected function setUp()
     {
+        if (!getenv('TESTS_APC_ENABLED')) {
+            $this->markTestSkipped('Enable TESTS_APC_ENABLED to run this test');
+        }
         $this->object = new ApcStorage(true);
     }
 
