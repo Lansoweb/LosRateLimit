@@ -13,37 +13,35 @@ class RateLimit
     const HEADER_RESET = 'X-Rate-Limit-Reset';
     const HEADER_REMAINING = 'X-Rate-Limit-Remaining';
 
+    /**
+     * Storage class.
+     *
+     * @var \LosMiddleware\RateLimit\Storage\StorageInterface
+     */
     private $storage;
-    private $maxRequests = 100;
-    private $resetTime = 3600;
-    private $ipMaxRequests = 10;
-    private $ipResetTime = 3600;
-    private $apiHeader = 'X-Api-Key';
-    private $trustForwarded = false;
 
+    /**
+     * @var array
+     */
+    private $options;
+
+    /**
+     * Constructor.
+     *
+     * @param \LosMiddleware\RateLimit\Storage\StorageInterface $storage
+     * @param array                                             $config
+     */
     public function __construct(StorageInterface $storage, $config)
     {
         $this->storage = $storage;
-        if (!empty($config)) {
-            if (array_key_exists('max_requests', $config)) {
-                $this->maxRequests = $config['max_requests'];
-            }
-            if (array_key_exists('reset_time', $config)) {
-                $this->resetTime = $config['reset_time'];
-            }
-            if (array_key_exists('ip_max_requests', $config)) {
-                $this->ipMaxRequests = $config['ip_max_requests'];
-            }
-            if (array_key_exists('ip_reset_time', $config)) {
-                $this->ipResetTime = $config['ip_reset_time'];
-            }
-            if (array_key_exists('api_header', $config)) {
-                $this->apiHeader = $config['api_header'];
-            }
-            if (array_key_exists('trust_forwarded', $config)) {
-                $this->trustForwarded = $config['trust_forwarded'];
-            }
-        }
+        $this->options = array_replace([
+            'max_requests' => 100,
+            'reset_time' => 3600,
+            'ip_max_requests' => 100,
+            'ip_reset_time' => 3600,
+            'api_header' => 'X-Api-Key',
+            'trust_forwarded' => false,
+        ], $config);
     }
 
     private function getClientIp(ServerRequestInterface $request)
@@ -54,7 +52,7 @@ class RateLimit
             $ips[] = $server['REMOTE_ADDR'];
         }
 
-        if ($this->trustForwarded) {
+        if ($this->options['trust_forwarded']) {
             $headers = [
                 'Client-Ip',
                 'Forwarded',
@@ -81,20 +79,20 @@ class RateLimit
 
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, $next)
     {
-        $keyArray = $request->getHeader($this->apiHeader);
+        $keyArray = $request->getHeader($this->options['api_header']);
 
         if (!empty($keyArray)) {
             $key = $keyArray[0];
-            $maxRequests = $this->maxRequests;
-            $resetTime = $this->resetTime;
+            $maxRequests = $this->options['max_requests'];
+            $resetTime = $this->options['reset_time'];
         } else {
             $key = $this->getClientIp($request);
-            $maxRequests = $this->ipMaxRequests;
-            $resetTime = $this->ipResetTime;
+            $maxRequests = $this->options['ip_max_requests'];
+            $resetTime = $this->options['ip_reset_time'];
         }
 
         if (empty($key)) {
-            throw new MissingParameterException("Missing client IP and {$this->apiHeader} header");
+            throw new MissingParameterException("Missing client IP and {$this->options['api_header']} header");
         }
 
         $data = $this->storage->get($key);

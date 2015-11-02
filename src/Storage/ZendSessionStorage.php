@@ -24,7 +24,7 @@ class ZendSessionStorage implements StorageInterface
             return $default;
         }
 
-        return $this->container->offsetGet($key, $default);
+        return $this->container->offsetGet($key);
     }
 
     /**

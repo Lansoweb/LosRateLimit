@@ -4,11 +4,13 @@ namespace LosMiddleware\RateLimit\Storage;
 
 class ApcStorage implements StorageInterface
 {
+    private $prefix = 'los-rate-limit.';
+
     public function __construct($clear = false)
     {
         if ($clear) {
-            apc_delete('los-rate-limit.remaining');
-            apc_delete('los-rate-limit.created');
+            apc_delete($this->prefix.'remaining');
+            apc_delete($this->prefix.'created');
         }
     }
 
@@ -19,11 +21,11 @@ class ApcStorage implements StorageInterface
      */
     public function get($key, $default = 0)
     {
-        if (!apc_exists('los-rate-limit.'.$key)) {
+        if (!apc_exists($this->prefix.$key)) {
             return $default;
         }
 
-        return apc_fetch('los-rate-limit.'.$key);
+        return apc_fetch($this->prefix.$key);
     }
 
     /**
@@ -33,6 +35,6 @@ class ApcStorage implements StorageInterface
      */
     public function set($key, $value)
     {
-        apc_store('los-rate-limit.'.$key, $value);
+        apc_store($this->prefix.$key, $value);
     }
 }
