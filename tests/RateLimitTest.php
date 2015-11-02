@@ -172,11 +172,4 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey(RateLimit::HEADER_LIMIT, $result->getHeaders());
         $this->assertLessThanOrEqual(10, $result->getHeader(RateLimit::HEADER_RESET)[0]);
     }
-
-    public function testUseApcStorage()
-    {
-        if (!getenv('TESTS_APC_ENABLED')) {
-            $this->markTestSkipped('Enable TESTS_APC_ENABLED to run this test');
-        }
-    }
 }

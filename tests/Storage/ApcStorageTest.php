@@ -36,6 +36,9 @@ class ApcStorageTest extends \PHPUnit_Framework_TestCase
      */
     public function testSetGet()
     {
+        if (!getenv('TESTS_APC_ENABLED')) {
+            $this->markTestSkipped('Enable TESTS_APC_ENABLED to run this test');
+        }
         $this->object->set('key', 'value');
         $this->assertSame('value', $this->object->get('key'));
         $this->assertSame('not', $this->object->get('nokey', 'not'));
