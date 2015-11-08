@@ -59,15 +59,4 @@ Just add the middleware as one of the first in your application.
 
 ### Zend Expressive
 
-Add a new entry in the pre_routing key:
-```php
-'middleware_pipeline' => [
-    'pre_routing' => [
-        [ 'middleware' => LosMiddleware\RateLimit\RateLimit::class ],
-        ...
-    ],
-    'post_routing' => [
-    ...
-    ],
-],    
-```  
+If you are using [expressive-skeleton](https://github.com/zendframework/zend-expressive-skeleton), you can copy `config/los-rate-limit.local.php.dist` to `config/autoload/los-rate-limit.local.php` and modify configuration as your needs.

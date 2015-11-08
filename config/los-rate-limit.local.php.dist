@@ -1,0 +1,26 @@
+<?php
+
+return [
+
+    'los_rate_limit' => [
+        'max_requests' => 100,
+        'reset_time' => 3600,
+        'ip_max_requests' => 100,
+        'ip_reset_time' => 3600,
+        'api_header' => 'X-Api-Key',
+        'trust_forwarded' => false,
+    ],
+
+    'dependencies' => [
+        'factories' => [
+            LosMiddleware\RateLimit\RateLimit::class => LosMiddleware\RateLimit\RateLimitFactory::class,
+        ],
+    ],
+
+    'middleware_pipeline' => [
+        'pre_routing' => [
+            [ 'middleware' => LosMiddleware\RateLimit\RateLimit::class ],
+        ],
+    ],
+
+];
