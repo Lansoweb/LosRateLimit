@@ -11,7 +11,7 @@
          
     <testsuites>
         <testsuite name="LosMiddleware\RateLimit Tests">
-            <directory>./tests</directory>
+            <directory>./test</directory>
         </testsuite>
     </testsuites>
 

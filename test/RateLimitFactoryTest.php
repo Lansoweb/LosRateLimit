@@ -35,7 +35,7 @@ class RateLimitFactoryTest extends \PHPUnit_Framework_TestCase
     /**
      * @covers LosMiddleware\RateLimit\RateLimitFactory::__invoke
      */
-    public function test__invoke()
+    public function testInvoke()
     {
         $container = new ServiceManager(new Config([]));
         $container->setService('config', []);
