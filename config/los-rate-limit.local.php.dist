@@ -18,8 +18,11 @@ return [
     ],
 
     'middleware_pipeline' => [
-        'pre_routing' => [
-            [ 'middleware' => LosMiddleware\RateLimit\RateLimit::class ],
+        'always' => [
+            'middleware' => [
+                LosMiddleware\RateLimit\RateLimit::class
+            ],
+            'priority' => PHP_INT_MAX,
         ],
     ],
 
