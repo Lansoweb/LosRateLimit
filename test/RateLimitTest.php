@@ -27,6 +27,7 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
                 'ip_reset_time' => 10,
                 'api_header' => 'X-Api-Key',
                 'trust_forwarded' => true,
+                'prefer_forwarded' => false,
             ],
         ]);
         //$factory = new RateLimitFactory();
