@@ -153,6 +153,6 @@ class RateLimit
         $response = $response->withAddedHeader(self::HEADER_LIMIT, (string) $maxRequests);
         $response = $response->withAddedHeader(self::HEADER_RESET, (string) $resetIn);
 
-        return $next($request, $response);
+        return $response;
     }
 }
