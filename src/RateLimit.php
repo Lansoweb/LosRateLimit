@@ -41,15 +41,24 @@ class RateLimit
             'ip_reset_time' => 3600,
             'api_header' => 'X-Api-Key',
             'trust_forwarded' => false,
+            'prefer_forwarded' => false,
         ], $config);
+
+        if ($this->options['prefer_forwarded'] && !$this->options['trust_forwarded']) {
+            throw new \LogicException('You must also "trust_forwarded" headers to "prefer_forwarded" ones.');
+        }
     }
 
     private function getClientIp(ServerRequestInterface $request)
     {
         $server = $request->getServerParams();
-        $ips = [];
         if (!empty($server['REMOTE_ADDR']) && filter_var($server['REMOTE_ADDR'], FILTER_VALIDATE_IP)) {
-            $ips[] = $server['REMOTE_ADDR'];
+            $realIp = $server['REMOTE_ADDR'];
+
+            if (!$this->options['prefer_forwarded']) {
+                // We will never use the forwarded headers if we found a real one, except when this flag's set.
+                return $realIp;
+            }
         }
 
         if ($this->options['trust_forwarded']) {
@@ -66,15 +75,17 @@ class RateLimit
                 $header = $request->getHeaderLine($name);
                 if (!empty($header)) {
                     foreach (array_map('trim', explode(',', $header)) as $ip) {
-                        if ((array_search($ip, $ips) === false) && filter_var($ip, FILTER_VALIDATE_IP)) {
-                            $ips[] = $ip;
+                        if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                            // If we got this far, we always favour the first forwarded match. And either we're
+                            // preferring forwarded IPs or didn't have a real one.
+                            return $ip;
                         }
                     }
                 }
             }
         }
 
-        return isset($ips[0]) ? $ips[0] : null;
+        return null;
     }
 
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, $next)
