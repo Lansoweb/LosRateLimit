@@ -85,6 +85,11 @@ class RateLimit
             }
         }
 
+        if (isset($realIp)) {
+            // We waited in order to 'prefer_forwarded', but only a direct IP was set.
+            return $realIp;
+        }
+
         return null;
     }
 
