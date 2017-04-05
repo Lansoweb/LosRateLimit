@@ -1,5 +1,5 @@
 {
-  "name" : "los/los-rate-limit",
+  "name" : "comicrelief/los-rate-limit",
   "description" : "Rate Limit Middleware for PHP",
   "require" : {
     "php" : ">=5.5",
