@@ -42,6 +42,14 @@ class RateLimit
             'api_header' => 'X-Api-Key',
             'trust_forwarded' => false,
             'prefer_forwarded' => false,
+            'forwarded_headers_allowed' => [
+                'Client-Ip',
+                'Forwarded',
+                'Forwarded-For',
+                'X-Cluster-Client-Ip',
+                'X-Forwarded',
+                'X-Forwarded-For',
+            ],
         ], $config);
 
         if ($this->options['prefer_forwarded'] && !$this->options['trust_forwarded']) {
@@ -62,16 +70,7 @@ class RateLimit
         }
 
         if ($this->options['trust_forwarded']) {
-            $headers = [
-                'Client-Ip',
-                'Forwarded',
-                'Forwarded-For',
-                'X-Cluster-Client-Ip',
-                'X-Forwarded',
-                'X-Forwarded-For',
-            ];
-
-            foreach ($headers as $name) {
+            foreach ($this->options['forwarded_headers_allowed'] as $name) {
                 $header = $request->getHeaderLine($name);
                 if (!empty($header)) {
                     foreach (array_map('trim', explode(',', $header)) as $ip) {
