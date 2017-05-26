@@ -50,6 +50,7 @@ class RateLimit
                 'X-Forwarded',
                 'X-Forwarded-For',
             ],
+            'forwarded_ip_index' => null,
         ], $config);
 
         if ($this->options['prefer_forwarded'] && !$this->options['trust_forwarded']) {
@@ -60,7 +61,7 @@ class RateLimit
     private function getClientIp(ServerRequestInterface $request)
     {
         $server = $request->getServerParams();
-        if (!empty($server['REMOTE_ADDR']) && filter_var($server['REMOTE_ADDR'], FILTER_VALIDATE_IP)) {
+        if (!empty($server['REMOTE_ADDR']) && $this->isIp($server['REMOTE_ADDR'])) {
             $realIp = $server['REMOTE_ADDR'];
 
             if (!$this->options['prefer_forwarded']) {
@@ -70,22 +71,33 @@ class RateLimit
         }
 
         if ($this->options['trust_forwarded']) {
+            // At this point, we either couldn't find a real IP or prefer_forwarded ones.
             foreach ($this->options['forwarded_headers_allowed'] as $name) {
                 $header = $request->getHeaderLine($name);
                 if (!empty($header)) {
-                    foreach (array_map('trim', explode(',', $header)) as $ip) {
-                        if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                            // If we got this far, we always favour the first forwarded match. And either we're
-                            // preferring forwarded IPs or didn't have a real one.
-                            return $ip;
+                    /** @var string[] $ips Possible IPs, verbatim from the forwarded header */
+                    $ips = array_map('trim', explode(',', $header));
+
+                    if ($this->options['forwarded_ip_index'] === null) {
+                        // Permit any IP in this header regardless of position, as long as it's a plausible format.
+                        foreach ($ips as $ip) {
+                            if ($this->isIp($ip)) {
+                                return $ip;
+                            }
                         }
+                    } else {
+                        // Permit only an IP at the configured index / position.
+                        $ip = array_slice($ips, (int) $this->options['forwarded_ip_index'], 1)[0];
+                        if ($this->isIp($ip)) {
+                            return $ip;
+                        } // else there may be other permitted header keys to check
                     }
                 }
             }
         }
 
         if (isset($realIp)) {
-            // We waited in order to 'prefer_forwarded', but only a direct IP was set.
+            // We waited in order to 'prefer_forwarded', but no acceptable forwarded option was found.
             return $realIp;
         }
 
@@ -158,5 +170,14 @@ class RateLimit
         $response = $response->withAddedHeader(self::HEADER_RESET, (string) $resetIn);
 
         return $response;
+    }
+
+    /**
+     * @param string $possibleIp
+     * @return bool Whether the given string is in correct format for an IP address
+     */
+    private function isIp($possibleIp)
+    {
+        return (filter_var($possibleIp, FILTER_VALIDATE_IP) !== false);
     }
 }
