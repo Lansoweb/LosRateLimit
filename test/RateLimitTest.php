@@ -36,6 +36,7 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
                     'X-Forwarded',
                     'X-Forwarded-For',
                 ],
+                'forwarded_ip_index' => null,
             ],
         ]);
         //$factory = new RateLimitFactory();
