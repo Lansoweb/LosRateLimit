@@ -53,7 +53,21 @@ class RateLimit implements MiddlewareInterface
             'ip_reset_time' => 3600,
             'api_header' => 'X-Api-Key',
             'trust_forwarded' => false,
+            'prefer_forwarded' => false,
+            'forwarded_headers_allowed' => [
+                'Client-Ip',
+                'Forwarded',
+                'Forwarded-For',
+                'X-Cluster-Client-Ip',
+                'X-Forwarded',
+                'X-Forwarded-For',
+            ],
+            'forwarded_ip_index' => null,
         ], $config);
+
+        if ($this->options['prefer_forwarded'] && !$this->options['trust_forwarded']) {
+            throw new \LogicException('You must also "trust_forwarded" headers to "prefer_forwarded" ones.');
+        }
     }
 
     /**
@@ -140,32 +154,50 @@ class RateLimit implements MiddlewareInterface
     {
         $server = $request->getServerParams();
         $ips = [];
-        if (! empty($server['REMOTE_ADDR']) && filter_var($server['REMOTE_ADDR'], FILTER_VALIDATE_IP)) {
+        if (!empty($server['REMOTE_ADDR']) && $this->isIp($server['REMOTE_ADDR'])) {
             $ips[] = $server['REMOTE_ADDR'];
         }
 
         if ($this->options['trust_forwarded']) {
-            $headers = [
-                'Client-Ip',
-                'Forwarded',
-                'Forwarded-For',
-                'X-Cluster-Client-Ip',
-                'X-Forwarded',
-                'X-Forwarded-For',
-            ];
-
-            foreach ($headers as $name) {
+            // At this point, we either couldn't find a real IP or prefer_forwarded ones.
+            foreach ($this->options['forwarded_headers_allowed'] as $name) {
                 $header = $request->getHeaderLine($name);
-                if (! empty($header)) {
-                    foreach (array_map('trim', explode(',', $header)) as $ip) {
-                        if ((array_search($ip, $ips) === false) && filter_var($ip, FILTER_VALIDATE_IP)) {
-                            $ips[] = $ip;
+                if (!empty($header)) {
+                    /** @var string[] $ips Possible IPs, verbatim from the forwarded header */
+                    $ips = array_map('trim', explode(',', $header));
+
+                    if ($this->options['forwarded_ip_index'] === null) {
+                        // Permit any IP in this header regardless of position, as long as it's a plausible format.
+                        foreach ($ips as $ip) {
+                            if ($this->isIp($ip)) {
+                                return $ip;
+                            }
                         }
+                    } else {
+                        // Permit only an IP at the configured index / position.
+                        $ip = array_slice($ips, (int) $this->options['forwarded_ip_index'], 1)[0];
+                        if ($this->isIp($ip)) {
+                            return $ip;
+                        } // else there may be other permitted header keys to check
                     }
                 }
             }
         }
 
-        return isset($ips[0]) ? $ips[0] : null;
+        if (isset($realIp)) {
+            // We waited in order to 'prefer_forwarded', but no acceptable forwarded option was found.
+            return $realIp;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param $possibleIp
+     * @return bool
+     */
+    private function isIp($possibleIp)
+    {
+        return (filter_var($possibleIp, FILTER_VALIDATE_IP) !== false);
     }
 }

@@ -39,6 +39,16 @@ php composer.phar require los/los-rate-limit
     'ip_reset_time' => 3600,
     'api_header' => 'X-Api-Key',
     'trust_forwarded' => false,
+    'prefer_forwarded' => false,
+    'forwarded_headers_allowed' => [
+        'Client-Ip',
+        'Forwarded',
+        'Forwarded-For',
+        'X-Cluster-Client-Ip',
+        'X-Forwarded',
+        'X-Forwarded-For',
+    ],
+    'forwarded_ip_index' => null,
 ]
 ```
 
@@ -48,6 +58,9 @@ php composer.phar require los/los-rate-limit
 * `ip_reset_time` After how many seconds the counter will be reset (using remote IP Key)
 * `api_header` Header name to get the api key from.
 * `trust_forwarded` If the X-Forwarded (and similar) headers and be trusted. If not, only $_SERVER['REMOTE_ADDR'] will be used.
+* `prefer_forwarded` Whether forwarded headers should be used in preference to the remote address, e.g. if all requests are forwarded through a routing component or reverse proxy which adds these headers predictably. This is a bad idea unless your app can **only** be reached this way.
+* `forwarded_headers_allowed` An array of strings which are headers you trust to contain source IP addresses.
+* `forwarded_ip_index` If null (default), the first plausible IP in an XFF header (reading left to right) is used. If numeric, only a specific index of IP is used. Use `-2` to get the penultimate IP from the list, which could make sense if the header always ends `...<client_ip>, <router_ip>`. Or use `0` to use only the first IP (stopping if it's not valid). Like `prefer_forwarded`, this only makes sense if your app's always reached through a predictable hop that controls the header - remember these are easily spoofed on the initial request.
 
 The values above indicate that the user can trigger 100 requests per hour.
 
