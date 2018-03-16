@@ -12,7 +12,7 @@ Attention! This middleware does not validate the Api Key, you must add a middlew
 
 ## Requirements
 
-* PHP >= 5.5
+* PHP >= 7.1
 * Psr\HttpMessage
 
 This middleware uses one of the pre-implemented storages: 
@@ -59,4 +59,6 @@ Just add the middleware as one of the first in your application.
 
 ### Zend Expressive
 
-If you are using [expressive-skeleton](https://github.com/zendframework/zend-expressive-skeleton), you can copy `config/los-rate-limit.local.php.dist` to `config/autoload/los-rate-limit.local.php` and modify configuration as your needs.
+If you are using [expressive-skeleton](https://github.com/zendframework/zend-expressive-skeleton), 
+you can copy `config/los-rate-limit.local.php.dist` to 
+`config/autoload/los-rate-limit.local.php` and modify configuration as your needs.

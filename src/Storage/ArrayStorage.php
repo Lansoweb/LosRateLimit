@@ -18,7 +18,7 @@ class ArrayStorage implements StorageInterface
      */
     public function get($key, $default = 0)
     {
-        if (!array_key_exists($key, $this->container)) {
+        if (! array_key_exists($key, $this->container)) {
             return $default;
         }
 

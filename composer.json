@@ -2,23 +2,22 @@
   "name" : "los/los-rate-limit",
   "description" : "Rate Limit Middleware for PHP",
   "require" : {
-    "php" : ">=5.5",
+    "php" : "^7.1",
     "psr/http-message" : "^1.0",
-    "container-interop/container-interop" : "~1.1"
+    "psr/container": "^1.0",
+    "psr/http-server-middleware": "^1.0",
+    "zendframework/zend-problem-details": "^1.0",
+    "zendframework/zend-diactoros": "^1.7"
   },
-  "repositories" : [ {
-    "type" : "composer",
-    "url" : "https://packagist.org/"
-  } ],
   "require-dev" : {
-    "zendframework/zend-diactoros" : "^1.1.3",
-    "phpunit/phpunit" : "^4.8.6",
-    "zendframework/zend-session" : "~2.5",
-    "zendframework/zend-servicemanager" : "~2.6",
-    "aura/session" : "~2.0",
+    "phpunit/phpunit" : "^6.0",
     "satooshi/php-coveralls" : "dev-master",
     "mikey179/vfsStream" : "~1.6",
-    "squizlabs/php_codesniffer": "^2.3"
+    "zendframework/zend-coding-standard": "^1.0",
+    "squizlabs/php_codesniffer": "^2.7",
+    "phpstan/phpstan": "^0.9.2",
+    "aura/session": "^2.1",
+    "zendframework/zend-session": "^2.8"
   },
   "license" : "BSD-3-Clause",
   "keywords" : [ "api", "rate", "limit", "middleware" ],
@@ -42,5 +41,14 @@
   "authors" : [ {
     "name" : "Leandro Silva",
     "email" : "leandro@leandrosilva.info"
-  } ]
+  } ],
+  "scripts": {
+    "check": [
+      "@cs-check",
+      "@phpstan"
+    ],
+    "cs-check": "phpcs",
+    "cs-fix": "phpcbf",
+    "phpstan": "phpstan analyse -l 4 -c phpstan.neon src"
+  }
 }

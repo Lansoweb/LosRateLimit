@@ -21,7 +21,7 @@ class ApcStorage implements StorageInterface
      */
     public function get($key, $default = 0)
     {
-        if (!apc_exists($this->prefix.$key)) {
+        if (! apc_exists($this->prefix.$key)) {
             return $default;
         }
 

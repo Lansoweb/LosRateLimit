@@ -6,8 +6,12 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use LosMiddleware\RateLimit\Storage\StorageInterface;
 use LosMiddleware\RateLimit\Exception\MissingParameterException;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Zend\Diactoros\Response;
+use Zend\ProblemDetails\ProblemDetailsResponseFactory;
 
-class RateLimit
+class RateLimit implements MiddlewareInterface
 {
     const HEADER_LIMIT = 'X-Rate-Limit-Limit';
     const HEADER_RESET = 'X-Rate-Limit-Reset';
@@ -25,15 +29,23 @@ class RateLimit
      */
     private $options;
 
+    /** @var ProblemDetailsResponseFactory */
+    private $problemDetailsResponseFactory;
+
     /**
      * Constructor.
      *
      * @param \LosMiddleware\RateLimit\Storage\StorageInterface $storage
-     * @param array                                             $config
+     * @param ProblemDetailsResponseFactory $problemDetailsResponseFactory
+     * @param array $config
      */
-    public function __construct(StorageInterface $storage, $config)
-    {
+    public function __construct(
+        StorageInterface $storage,
+        ProblemDetailsResponseFactory $problemDetailsResponseFactory,
+        $config = []
+    ) {
         $this->storage = $storage;
+        $this->problemDetailsResponseFactory = $problemDetailsResponseFactory;
         $this->options = array_replace([
             'max_requests' => 100,
             'reset_time' => 3600,
@@ -44,44 +56,17 @@ class RateLimit
         ], $config);
     }
 
-    private function getClientIp(ServerRequestInterface $request)
-    {
-        $server = $request->getServerParams();
-        $ips = [];
-        if (!empty($server['REMOTE_ADDR']) && filter_var($server['REMOTE_ADDR'], FILTER_VALIDATE_IP)) {
-            $ips[] = $server['REMOTE_ADDR'];
-        }
-
-        if ($this->options['trust_forwarded']) {
-            $headers = [
-                'Client-Ip',
-                'Forwarded',
-                'Forwarded-For',
-                'X-Cluster-Client-Ip',
-                'X-Forwarded',
-                'X-Forwarded-For',
-            ];
-
-            foreach ($headers as $name) {
-                $header = $request->getHeaderLine($name);
-                if (!empty($header)) {
-                    foreach (array_map('trim', explode(',', $header)) as $ip) {
-                        if ((array_search($ip, $ips) === false) && filter_var($ip, FILTER_VALIDATE_IP)) {
-                            $ips[] = $ip;
-                        }
-                    }
-                }
-            }
-        }
-
-        return isset($ips[0]) ? $ips[0] : null;
-    }
-
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, $next)
+    /**
+     * @param ServerRequestInterface $request
+     * @param RequestHandlerInterface $handler
+     * @return ResponseInterface
+     * @throws MissingParameterException
+     */
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $keyArray = $request->getHeader($this->options['api_header']);
 
-        if (!empty($keyArray)) {
+        if (! empty($keyArray)) {
             $key = $keyArray[0];
             $maxRequests = $this->options['max_requests'];
             $resetTime = $this->options['reset_time'];
@@ -97,7 +82,7 @@ class RateLimit
 
         $data = $this->storage->get($key);
 
-        if (empty($data) || !is_array($data)) {
+        if (empty($data) || ! is_array($data)) {
             $data = [
                 'remaining' => $maxRequests,
                 'created' => 0,
@@ -132,16 +117,55 @@ class RateLimit
         $this->storage->set($key, $data);
 
         if ($remaining <= 0) {
-            $response = $response->withHeader(self::HEADER_RESET, (string) $resetIn);
+            $response = (new RateLimitResponseFactory(function () : ResponseInterface {
+                return new Response();
+            }))->create($request, (int) $maxRequests, $resetIn);
 
-            return $response->withStatus(429);
+            return $response;
         }
 
-        $response = $next($request, $response);
+        $response = $handler->handle($request);
         $response = $response->withHeader(self::HEADER_REMAINING, (string) $remaining);
         $response = $response->withAddedHeader(self::HEADER_LIMIT, (string) $maxRequests);
         $response = $response->withAddedHeader(self::HEADER_RESET, (string) $resetIn);
 
-        return $next($request, $response);
+        return $response;
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     * @return mixed|null
+     */
+    private function getClientIp(ServerRequestInterface $request)
+    {
+        $server = $request->getServerParams();
+        $ips = [];
+        if (! empty($server['REMOTE_ADDR']) && filter_var($server['REMOTE_ADDR'], FILTER_VALIDATE_IP)) {
+            $ips[] = $server['REMOTE_ADDR'];
+        }
+
+        if ($this->options['trust_forwarded']) {
+            $headers = [
+                'Client-Ip',
+                'Forwarded',
+                'Forwarded-For',
+                'X-Cluster-Client-Ip',
+                'X-Forwarded',
+                'X-Forwarded-For',
+            ];
+
+            foreach ($headers as $name) {
+                $header = $request->getHeaderLine($name);
+                if (! empty($header)) {
+                    foreach (array_map('trim', explode(',', $header)) as $ip) {
+                        if ((array_search($ip, $ips) === false) && filter_var($ip, FILTER_VALIDATE_IP)) {
+                            $ips[] = $ip;
+                        }
+                    }
+                }
+            }
+        }
+
+        return isset($ips[0]) ? $ips[0] : null;
     }
 }

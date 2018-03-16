@@ -17,7 +17,7 @@ class FileStorage implements StorageInterface
 
     private function getFile()
     {
-        if (!file_exists($this->fileName)) {
+        if (! file_exists($this->fileName)) {
             file_put_contents($this->fileName, '[]');
         }
 
