@@ -2,14 +2,15 @@
 
 namespace LosMiddleware\RateLimit;
 
-use LosMiddleware\RateLimit\Storage\ApcStorage;
+use LosMiddleware\RateLimit\Storage\FileStorage;
 use Psr\Container\ContainerInterface;
+use Zend\ProblemDetails\ProblemDetailsResponseFactory;
 
-class RateLimitFactory
+class RateLimitMiddlewareFactory
 {
     /**
      * @param ContainerInterface $container
-     * @return RateLimit
+     * @return RateLimitMiddleware
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \Psr\Container\NotFoundExceptionInterface
      */
@@ -18,6 +19,10 @@ class RateLimitFactory
         $config = $container->get('config');
         $rateConfig = $config['los_rate_limit'] ?? [];
 
-        return new RateLimit(new ApcStorage(), $rateConfig);
+        return new RateLimitMiddleware(
+            new FileStorage(),
+            $container->get(ProblemDetailsResponseFactory::class),
+            $rateConfig
+        );
     }
 }

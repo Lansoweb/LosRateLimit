@@ -2,50 +2,44 @@
 
 namespace LosMiddleware\RateLimit;
 
+use LosMiddleware\RateLimit\Exception\RateLimitException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use LosMiddleware\RateLimit\Storage\StorageInterface;
 use LosMiddleware\RateLimit\Exception\MissingParameterException;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Zend\Diactoros\Response;
 use Zend\ProblemDetails\ProblemDetailsResponseFactory;
 
-class RateLimit implements MiddlewareInterface
+class RateLimitMiddleware implements MiddlewareInterface
 {
-    const HEADER_LIMIT = 'X-Rate-Limit-Limit';
-    const HEADER_RESET = 'X-Rate-Limit-Reset';
-    const HEADER_REMAINING = 'X-Rate-Limit-Remaining';
+    const HEADER_LIMIT = 'X-RateLimit-Limit';
+    const HEADER_RESET = 'X-RateLimit-Reset';
+    const HEADER_REMAINING = 'X-RateLimit-Remaining';
 
-    /**
-     * Storage class.
-     *
-     * @var \LosMiddleware\RateLimit\Storage\StorageInterface
-     */
+    /** @var StorageInterface */
     private $storage;
 
-    /**
-     * @var array
-     */
-    private $options;
+    /** @var array */
+    protected $options;
 
     /** @var ProblemDetailsResponseFactory */
-    private $problemDetailsResponseFactory;
+    private $problemResponseFactory;
 
     /**
      * Constructor.
      *
      * @param \LosMiddleware\RateLimit\Storage\StorageInterface $storage
-     * @param ProblemDetailsResponseFactory $problemDetailsResponseFactory
+     * @param ProblemDetailsResponseFactory $problemResponseFactory
      * @param array $config
      */
     public function __construct(
         StorageInterface $storage,
-        ProblemDetailsResponseFactory $problemDetailsResponseFactory,
+        ProblemDetailsResponseFactory $problemResponseFactory,
         $config = []
     ) {
         $this->storage = $storage;
-        $this->problemDetailsResponseFactory = $problemDetailsResponseFactory;
+        $this->problemResponseFactory = $problemResponseFactory;
         $this->options = array_replace([
             'max_requests' => 100,
             'reset_time' => 3600,
@@ -63,9 +57,16 @@ class RateLimit implements MiddlewareInterface
                 'X-Forwarded-For',
             ],
             'forwarded_ip_index' => null,
+            'headers' => [
+                'limit' => self::HEADER_LIMIT,
+                'remaining' => self::HEADER_REMAINING,
+                'reset' => self::HEADER_RESET,
+            ],
+            'keys' => [],
+            'ips' => [],
         ], $config);
 
-        if ($this->options['prefer_forwarded'] && !$this->options['trust_forwarded']) {
+        if ($this->options['prefer_forwarded'] && ! $this->options['trust_forwarded']) {
             throw new \LogicException('You must also "trust_forwarded" headers to "prefer_forwarded" ones.');
         }
     }
@@ -82,12 +83,12 @@ class RateLimit implements MiddlewareInterface
 
         if (! empty($keyArray)) {
             $key = $keyArray[0];
-            $maxRequests = $this->options['max_requests'];
-            $resetTime = $this->options['reset_time'];
+            $maxRequests = $this->options['keys'][$key]['max_requests'] ?? $this->options['max_requests'];
+            $resetTime = $this->options['keys'][$key]['reset_time'] ?? $this->options['reset_time'];
         } else {
             $key = $this->getClientIp($request);
-            $maxRequests = $this->options['ip_max_requests'];
-            $resetTime = $this->options['ip_reset_time'];
+            $maxRequests = $this->options['ips'][$key]['max_requests'] ?? $this->options['ip_max_requests'];
+            $resetTime = $this->options['ips'][$key]['reset_time'] ?? $this->options['ip_reset_time'];
         }
 
         if (empty($key)) {
@@ -131,17 +132,18 @@ class RateLimit implements MiddlewareInterface
         $this->storage->set($key, $data);
 
         if ($remaining <= 0) {
-            $response = (new RateLimitResponseFactory(function () : ResponseInterface {
-                return new Response();
-            }))->create($request, (int) $maxRequests, $resetIn);
-
-            return $response;
+            $response = $this->problemResponseFactory->createResponseFromThrowable(
+                $request,
+                RateLimitException::create($maxRequests)
+            );
+            $response = $response->withAddedHeader($this->options['headers']['limit'], (string) $maxRequests);
+            return $response->withAddedHeader($this->options['headers']['reset'], (string) $resetIn);
         }
 
         $response = $handler->handle($request);
-        $response = $response->withHeader(self::HEADER_REMAINING, (string) $remaining);
-        $response = $response->withAddedHeader(self::HEADER_LIMIT, (string) $maxRequests);
-        $response = $response->withAddedHeader(self::HEADER_RESET, (string) $resetIn);
+        $response = $response->withHeader($this->options['headers']['remaining'], (string) $remaining);
+        $response = $response->withAddedHeader($this->options['headers']['limit'], (string) $maxRequests);
+        $response = $response->withAddedHeader($this->options['headers']['reset'], (string) $resetIn);
 
         return $response;
     }
@@ -154,7 +156,7 @@ class RateLimit implements MiddlewareInterface
     {
         $server = $request->getServerParams();
         $ips = [];
-        if (!empty($server['REMOTE_ADDR']) && $this->isIp($server['REMOTE_ADDR'])) {
+        if (! empty($server['REMOTE_ADDR']) && $this->isIp($server['REMOTE_ADDR'])) {
             $ips[] = $server['REMOTE_ADDR'];
         }
 
@@ -162,7 +164,7 @@ class RateLimit implements MiddlewareInterface
             // At this point, we either couldn't find a real IP or prefer_forwarded ones.
             foreach ($this->options['forwarded_headers_allowed'] as $name) {
                 $header = $request->getHeaderLine($name);
-                if (!empty($header)) {
+                if (! empty($header)) {
                     /** @var string[] $ips Possible IPs, verbatim from the forwarded header */
                     $ips = array_map('trim', explode(',', $header));
 
@@ -184,16 +186,15 @@ class RateLimit implements MiddlewareInterface
             }
         }
 
-        if (isset($realIp)) {
-            // We waited in order to 'prefer_forwarded', but no acceptable forwarded option was found.
-            return $realIp;
+        if (count($ips) > 0) {
+            return $ips[0];
         }
 
         return null;
     }
 
     /**
-     * @param $possibleIp
+     * @param mixed $possibleIp
      * @return bool
      */
     private function isIp($possibleIp)

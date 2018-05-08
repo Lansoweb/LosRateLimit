@@ -2,23 +2,22 @@
 
 namespace LosMiddlewareTest\RateLimit;
 
+use LosMiddleware\RateLimit\RateLimitMiddleware;
+use PHPUnit\Framework\TestCase;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
-use LosMiddleware\RateLimit\RateLimit;
-use Zend\Session\Container;
 use Zend\ServiceManager\ServiceManager;
-use Zend\ServiceManager\Config;
-use LosMiddleware\RateLimit\RateLimitFactory;
+use Zend\Session\Container;
 use LosMiddleware\RateLimit\Storage\ArrayStorage;
 use LosMiddleware\RateLimit\Exception\MissingParameterException;
 
-class RateLimitTest extends \PHPUnit_Framework_TestCase
+class RateLimitTest extends TestCase
 {
     protected $middleware;
 
     protected function setUp()
     {
-        $container = new ServiceManager(new Config([]));
+        $container = new ServiceManager([]);
         $container->setService('config', [
             'los_rate_limit' => [
                 'max_requests' => 2,
@@ -43,7 +42,7 @@ class RateLimitTest extends \PHPUnit_Framework_TestCase
         //$this->middleware = $factory($container);
         $config = $container->get('config');
         $rateConfig = array_key_exists('los_rate_limit', $config) ? $config['los_rate_limit'] : [];
-        $this->middleware = new RateLimit(new ArrayStorage(), $rateConfig);
+        $this->middleware = new RateLimitMiddleware(new ArrayStorage(), $rateConfig);
     }
 
     /**
