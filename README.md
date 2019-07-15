@@ -1,6 +1,6 @@
 # Rate Limit Middleware for PHP
 
-[![Build Status](https://travis-ci.org/Lansoweb/LosRateLimit.svg?branch=master)](https://travis-ci.org/Lansoweb/LosRateLimit) [![Latest Stable Version](https://poser.pugx.org/los/los-rate-limit/v/stable.svg)](https://packagist.org/packages/los/los-rate-limit) [![Total Downloads](https://poser.pugx.org/los/los-rate-limit/downloads.svg)](https://packagist.org/packages/los/los-rate-limit) [![Coverage Status](https://coveralls.io/repos/Lansoweb/LosRateLimit/badge.svg?branch=master&service=github)](https://coveralls.io/github/Lansoweb/LosRateLimit?branch=master)
+[![Build Status](https://travis-ci.org/Lansoweb/LosRateLimit.svg?branch=master)](https://travis-ci.org/Lansoweb/LosRateLimit) [![Latest Stable Version](https://poser.pugx.org/los/los-rate-limit/v/stable.svg)](https://packagist.org/packages/los/los-rate-limit) [![Total Downloads](https://poser.pugx.org/los/los-rate-limit/downloads.svg)](https://packagist.org/packages/los/los-rate-limit)
 
 LosRateLimit is a php middleware to implement a rate limit.
 
@@ -13,21 +13,12 @@ Attention! This middleware does not validate the Api Key, you must add a middlew
 ## Requirements
 
 * PHP >= 7.1
-* Psr\HttpMessage
-
-This middleware uses one of the pre-implemented storages:
-* Apc (default)
-* Array
-* Aura Session
-* File
-* Zend Session
-
-But you can implement your own, like a DB storage. Just implement the StorageInterface.
+* Psr\SimpleCache implementation
 
 ## Installation
 
 ```bash
-php composer.phar require los/los-rate-limit
+composer require los/los-rate-limit
 ```
 
 ### Configuration
@@ -87,7 +78,11 @@ If you want to disable ip access (e.g. allowing just access via X-Api-Key), just
 
 ## Usage
 
-Just add the middleware as one of the first in your application.
+Just add the middleware as one of the first middlewares.
+
+The provided factory uses the container to get a \Psr\SimpleCache\CacheInterface (PSR-16). 
+Most implementations provide both PSR-6 and PSR-16, or at least a decorator.
+Recommended: [zend-cache](https://github.com/zendframework/zend-cache) or [symfony/cache](https://github.com/symfony/cache).
 
 ### Zend Expressive
 

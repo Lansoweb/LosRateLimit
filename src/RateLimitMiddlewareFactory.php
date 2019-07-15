@@ -1,28 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace LosMiddleware\RateLimit;
 
-use LosMiddleware\RateLimit\Storage\FileStorage;
 use Psr\Container\ContainerInterface;
+use Psr\SimpleCache\CacheInterface;
 use Zend\ProblemDetails\ProblemDetailsResponseFactory;
 
 class RateLimitMiddlewareFactory
 {
-    /**
-     * @param ContainerInterface $container
-     * @return RateLimitMiddleware
-     * @throws \Psr\Container\ContainerExceptionInterface
-     * @throws \Psr\Container\NotFoundExceptionInterface
-     */
-    public function __invoke(ContainerInterface $container)
+    public function __invoke(ContainerInterface $container) : RateLimitMiddleware
     {
-        $config = $container->get('config');
+        $config     = $container->get('config');
         $rateConfig = $config['los_rate_limit'] ?? [];
 
         return new RateLimitMiddleware(
-            new FileStorage(),
+            $container->get(CacheInterface::class),
             $container->get(ProblemDetailsResponseFactory::class),
-            $rateConfig
+            new RateLimitOptions($rateConfig)
         );
     }
 }

@@ -9,7 +9,7 @@ use Zend\Diactoros\ServerRequest;
 use Zend\ServiceManager\ServiceManager;
 use Zend\Session\Container;
 use LosMiddleware\RateLimit\Storage\ArrayStorage;
-use LosMiddleware\RateLimit\Exception\MissingParameterException;
+use LosMiddleware\RateLimit\Exception\MissingRequirement;
 
 class RateLimitTest extends TestCase
 {
@@ -58,7 +58,7 @@ class RateLimitTest extends TestCase
             return $response;
         };
 
-        $this->setExpectedException(MissingParameterException::class);
+        $this->setExpectedException(MissingRequirement::class);
         call_user_func($this->middleware, $request, $response, $outFunction);
     }
 
