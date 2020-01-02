@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace LosMiddleware\RateLimit\Exception;
 
 use Exception;
-use Zend\ProblemDetails\Exception\CommonProblemDetailsExceptionTrait;
-use Zend\ProblemDetails\Exception\ProblemDetailsExceptionInterface;
+use Mezzio\ProblemDetails\Exception\CommonProblemDetailsExceptionTrait;
+use Mezzio\ProblemDetails\Exception\ProblemDetailsExceptionInterface;
 use function sprintf;
 
 class ReachedRateLimit extends Exception implements ProblemDetailsExceptionInterface

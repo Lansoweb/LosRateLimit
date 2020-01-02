@@ -6,7 +6,7 @@ namespace LosMiddleware\RateLimit;
 
 use Psr\Container\ContainerInterface;
 use Psr\SimpleCache\CacheInterface;
-use Zend\ProblemDetails\ProblemDetailsResponseFactory;
+use Mezzio\ProblemDetails\ProblemDetailsResponseFactory;
 
 class RateLimitMiddlewareFactory
 {

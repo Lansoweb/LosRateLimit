@@ -8,9 +8,9 @@ use LosMiddleware\RateLimit\RateLimitOptions;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\SimpleCache\CacheInterface;
-use Zend\Diactoros\Response\JsonResponse;
-use Zend\Diactoros\ServerRequest;
-use Zend\ProblemDetails\ProblemDetailsResponseFactory;
+use Laminas\Diactoros\Response\JsonResponse;
+use Laminas\Diactoros\ServerRequest;
+use Mezzio\ProblemDetails\ProblemDetailsResponseFactory;
 
 class RateLimitTest extends TestCase
 {

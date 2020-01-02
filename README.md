@@ -82,10 +82,10 @@ Just add the middleware as one of the first middlewares.
 
 The provided factory uses the container to get a \Psr\SimpleCache\CacheInterface (PSR-16). 
 Most implementations provide both PSR-6 and PSR-16, or at least a decorator.
-Recommended: [zend-cache](https://github.com/zendframework/zend-cache) or [symfony/cache](https://github.com/symfony/cache).
+Recommended: [zend-cache](https://github.com/laminas/laminas-cache) or [symfony/cache](https://github.com/symfony/cache).
 
 ### Zend Expressive
 
-If you are using [expressive-skeleton](https://github.com/zendframework/zend-expressive-skeleton),
+If you are using [expressive-skeleton](https://github.com/mezzio/mezzio-skeleton),
 you can copy `config/los-rate-limit.local.php.dist` to
 `config/autoload/los-rate-limit.local.php` and modify configuration as your needs.
