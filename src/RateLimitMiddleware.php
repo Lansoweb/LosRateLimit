@@ -21,6 +21,7 @@ use function count;
 use function explode;
 use function filter_var;
 use function is_array;
+use function str_replace;
 use function time;
 
 class RateLimitMiddleware implements MiddlewareInterface
@@ -72,6 +73,8 @@ class RateLimitMiddleware implements MiddlewareInterface
             if (empty($key)) {
                 throw new MissingRequirement('Could not detect the client IP');
             }
+
+            $key = str_replace('.', '-', $key);
         }
 
         $data = $this->storage->get($key);
