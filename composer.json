@@ -2,7 +2,7 @@
     "name": "los/los-rate-limit",
     "description": "Rate Limit Middleware for PHP",
     "require": {
-        "php": "^7.1 || ^8.0",
+        "php": "^7.4 || ^8.0",
         "psr/http-message": "^1.0",
         "psr/container": "^1.0",
         "psr/http-server-middleware": "^1.0",
