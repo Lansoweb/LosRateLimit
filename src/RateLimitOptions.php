@@ -34,6 +34,8 @@ class RateLimitOptions extends ArrayObject
         ],
         'keys' => [],
         'ips' => [],
+        'hash_ips' => false,
+        'hash_salt' => 'Los%Rate',
     ];
 
     /**
