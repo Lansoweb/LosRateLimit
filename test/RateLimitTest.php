@@ -99,6 +99,21 @@ class RateLimitTest extends TestSetup
         $this->assertSame(429, $result->getStatusCode());
     }
 
+    public function testStoresUnhashedIps()
+    {
+        $clientIp = '192.168.1.1';
+        $expectedCacheKey = '192-168-1-1';
+
+        $request = new ServerRequest(['REMOTE_ADDR' => '127.0.0.1']);
+        $request = $request->withHeader('X-Forwarded-For', $clientIp);
+
+        $handler = $this->createMock(RequestHandlerInterface::class);
+        $handler->method('handle')->willReturn(new JsonResponse([]));
+        $this->middleware->process($request, $handler);
+
+        $this->assertArrayHasKey($expectedCacheKey, $this->cache);
+    }
+
     public function testReset()
     {
 //        $container = new Container('LosRateLimit');
