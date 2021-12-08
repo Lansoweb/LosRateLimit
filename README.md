@@ -57,6 +57,8 @@ composer require los/los-rate-limit
             'reset_time' => 3600,
         ],
     ],
+    'hash_ips' => false,
+    'hash_salt' => 'Los%Rate',
 ]
 ```
 
@@ -71,6 +73,11 @@ composer require los/los-rate-limit
 * `forwarded_ip_index` If null (default), the first plausible IP in an XFF header (reading left to right) is used. If numeric, only a specific index of IP is used. Use `-2` to get the penultimate IP from the list, which could make sense if the header always ends `...<client_ip>, <router_ip>`. Or use `0` to use only the first IP (stopping if it's not valid). Like `prefer_forwarded`, this only makes sense if your app's always reached through a predictable hop that controls the header - remember these are easily spoofed on the initial request.
 * `keys` Specify different max_requests/reset_time per api key
 * `ips` Specify different max_requests/reset_time per IP
+* `hash_ips` Enable the hashing of IP addresses before storing them. This is particularly useful when using a 
+  filesystem-based cache implementation and working with IPv6 addresses. A salted MD5-hash will be used if you set 
+  this to `true`.
+* `hash_salt' This setting allows you to optionally define a custom salt when using hashed IP addresses. Only 
+  effective when `hash_ips` is `true`.
 
 The values above indicate that the user can trigger 100 requests per hour.
 

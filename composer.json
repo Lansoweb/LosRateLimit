@@ -27,7 +27,7 @@
     ],
     "autoload-dev": {
         "psr-4": {
-            "LosMiddlewareTest\\RateLimit\\": "tests/"
+            "LosMiddlewareTest\\RateLimit\\": "test/"
         }
     },
     "autoload": {

@@ -21,6 +21,7 @@ use function count;
 use function explode;
 use function filter_var;
 use function is_array;
+use function md5;
 use function str_replace;
 use function time;
 
@@ -74,7 +75,11 @@ class RateLimitMiddleware implements MiddlewareInterface
                 throw new MissingRequirement('Could not detect the client IP');
             }
 
-            $key = str_replace('.', '-', $key);
+            if ($this->options['hash_ips'] === true) {
+                $key = $this->hashIp($key);
+            } else {
+                $key = str_replace('.', '-', $key);
+            }
         }
 
         $data = $this->storage->get($key);
@@ -171,6 +176,13 @@ class RateLimitMiddleware implements MiddlewareInterface
         }
 
         return null;
+    }
+
+    private function hashIp(string $ip) : string
+    {
+        $salt = $this->options['hash_salt'];
+
+        return md5($salt . $ip);
     }
 
     /**
