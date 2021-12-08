@@ -4,15 +4,15 @@
 
 LosRateLimit is a php middleware to implement a rate limit.
 
-First, the middleware will look for an X-Api-Key header to use as key. If not found, it will fallback to the remote IP.
+First, the middleware will look for an X-Api-Key header to use as key. If not found, it will fall back to the remote IP.
 
-Each one, has it's own limits (see configuration bellow).
+Each one has its own limits (see configuration below).
 
 Attention! This middleware does not validate the Api Key, you must add a middleware before this one to validate it.
 
 ## Requirements
 
-* PHP >= 7.1
+* PHP >= 7.4
 * Psr\SimpleCache implementation
 
 ## Installation
