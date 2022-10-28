@@ -43,6 +43,7 @@ class RateLimitOptions extends ArrayObject
      *
      * @return mixed|null
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($index)
     {
         if (! $this->offsetExists($index) && array_key_exists($index, $this->defaultValues)) {
