@@ -12,7 +12,7 @@ Attention! This middleware does not validate the Api Key, you must add a middlew
 
 ## Requirements
 
-* PHP >= 7.4
+* PHP >= 8.0
 * Psr\SimpleCache implementation
 
 ## Installation
@@ -23,7 +23,8 @@ composer require los/los-rate-limit
 
 ### Configuration
 ```php
-'los_rate_limit' => [
+'los' => [
+  'rate-limit' => [
     'max_requests' => 100,
     'reset_time' => 3600,
     'ip_max_requests' => 100,
@@ -59,7 +60,8 @@ composer require los/los-rate-limit
     ],
     'hash_ips' => false,
     'hash_salt' => 'Los%Rate',
-]
+  ],
+],
 ```
 
 * `max_requests` How many requests are allowed before the reset time (using API Key)
@@ -91,8 +93,8 @@ The provided factory uses the container to get a \Psr\SimpleCache\CacheInterface
 Most implementations provide both PSR-6 and PSR-16, or at least a decorator.
 Recommended: [zend-cache](https://github.com/laminas/laminas-cache) or [symfony/cache](https://github.com/symfony/cache).
 
-### Zend Expressive
+### Laminas / Mezzio
 
-If you are using [expressive-skeleton](https://github.com/mezzio/mezzio-skeleton),
+If you are using [mezzio-skeleton](https://github.com/mezzio/mezzio-skeleton),
 you can copy `config/los-rate-limit.local.php.dist` to
 `config/autoload/los-rate-limit.local.php` and modify configuration as your needs.

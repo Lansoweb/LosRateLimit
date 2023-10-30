@@ -1,23 +1,24 @@
 <?php
 
 return [
-    'los_rate_limit' => [
-        'max_requests' => 100,
-        'reset_time' => 3600,
-        'ip_max_requests' => 100,
-        'ip_reset_time' => 3600,
-        'api_header' => 'X-Api-Key',
-        'trust_forwarded' => false,
-        'headers' => [
-            'limit' => 'X-RateLimit-Limit',
-            'remaining' => 'X-RateLimit-Remaining',
-            'reset' => 'X-RateLimit-Reset',
+    'los' => [
+        'rate-limit' => [
+            'max_requests' => 100,
+            'reset_time' => 3600,
+            'ip_max_requests' => 100,
+            'ip_reset_time' => 3600,
+            'api_header' => 'X-Api-Key',
+            'trust_forwarded' => false,
+            'headers' => [
+                'limit' => 'X-RateLimit-Limit',
+                'remaining' => 'X-RateLimit-Remaining',
+                'reset' => 'X-RateLimit-Reset',
+            ],
         ],
     ],
     'dependencies' => [
         'factories' => [
-            LosMiddleware\RateLimit\RateLimitMiddleware::class =>
-                LosMiddleware\RateLimit\RateLimitMiddlewareFactory::class,
+            Los\RateLimit\RateLimitMiddleware::class => Los\RateLimit\RateLimitMiddlewareFactory::class,
         ],
     ],
 ];
