@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace LosMiddleware\RateLimit;
+namespace Los\RateLimit;
 
 use LogicException;
-use LosMiddleware\RateLimit\Exception\MissingRequirement;
-use LosMiddleware\RateLimit\Exception\ReachedRateLimit;
+use Los\RateLimit\Exception\MissingRequirement;
+use Los\RateLimit\Exception\ReachedRateLimit;
+use Mezzio\ProblemDetails\ProblemDetailsResponseFactory;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\SimpleCache\CacheInterface;
-use Mezzio\ProblemDetails\ProblemDetailsResponseFactory;
-use const FILTER_VALIDATE_IP;
+
 use function array_key_exists;
 use function array_map;
 use function array_slice;
@@ -25,36 +25,25 @@ use function md5;
 use function str_replace;
 use function time;
 
+use const FILTER_VALIDATE_IP;
+
 class RateLimitMiddleware implements MiddlewareInterface
 {
     public const HEADER_LIMIT     = 'X-RateLimit-Limit';
     public const HEADER_RESET     = 'X-RateLimit-Reset';
     public const HEADER_REMAINING = 'X-RateLimit-Remaining';
 
-    /** @var CacheInterface */
-    private $storage;
-
-    /** @var RateLimitOptions */
-    protected $options;
-
-    /** @var ProblemDetailsResponseFactory */
-    private $problemResponseFactory;
-
     public function __construct(
-        CacheInterface $storage,
-        ProblemDetailsResponseFactory $problemResponseFactory,
-        RateLimitOptions $options
+        private CacheInterface $storage,
+        private ProblemDetailsResponseFactory $problemResponseFactory,
+        protected RateLimitOptions $options,
     ) {
-        $this->storage                = $storage;
-        $this->problemResponseFactory = $problemResponseFactory;
-        $this->options                = $options;
-
         if ($this->options['prefer_forwarded'] && ! $this->options['trust_forwarded']) {
             throw new LogicException('You must also "trust_forwarded" headers to "prefer_forwarded" ones.');
         }
     }
 
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler) : ResponseInterface
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $keyArray = $request->getHeader($this->options['api_header']);
 
@@ -119,7 +108,7 @@ class RateLimitMiddleware implements MiddlewareInterface
         if ($remaining === 0) {
             $response = $this->problemResponseFactory->createResponseFromThrowable(
                 $request,
-                ReachedRateLimit::create($maxRequests)
+                ReachedRateLimit::create($maxRequests),
             );
         } else {
             $response = $handler->handle($request);
@@ -132,10 +121,7 @@ class RateLimitMiddleware implements MiddlewareInterface
         return $response;
     }
 
-    /**
-     * @return mixed|null
-     */
-    private function getClientIp(ServerRequestInterface $request)
+    private function getClientIp(ServerRequestInterface $request): string|null
     {
         $server = $request->getServerParams();
         $ips    = [];
@@ -178,17 +164,14 @@ class RateLimitMiddleware implements MiddlewareInterface
         return null;
     }
 
-    private function hashIp(string $ip) : string
+    private function hashIp(string $ip): string
     {
         $salt = $this->options['hash_salt'];
 
         return md5($salt . $ip);
     }
 
-    /**
-     * @param mixed $possibleIp
-     */
-    private function isIp($possibleIp) : bool
+    private function isIp(mixed $possibleIp): bool
     {
         return filter_var($possibleIp, FILTER_VALIDATE_IP) !== false;
     }

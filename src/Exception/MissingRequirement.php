@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LosMiddleware\RateLimit\Exception;
+namespace Los\RateLimit\Exception;
 
 class MissingRequirement extends ReachedRateLimit
 {

@@ -8,7 +8,5 @@
 	<file>config</file>
 	<file>src</file>
 
-	<rule ref="Doctrine">
-		<exclude name="SlevomatCodingStandard.TypeHints.TypeHintDeclaration" />
-	</rule>
+	<rule ref="Doctrine"/>
 </ruleset>

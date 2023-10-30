@@ -2,15 +2,17 @@
 
 declare(strict_types=1);
 
-namespace LosMiddleware\RateLimit;
+namespace Los\RateLimit;
 
 use ArrayObject;
+use ReturnTypeWillChange;
+
 use function array_key_exists;
 
 class RateLimitOptions extends ArrayObject
 {
-    /** @var array */
-    private $defaultValues = [
+    // phpcs:ignore
+    private array $defaultValues = [
         'max_requests' => 100,
         'reset_time' => 3600,
         'ip_max_requests' => 100,
@@ -38,18 +40,13 @@ class RateLimitOptions extends ArrayObject
         'hash_salt' => 'Los%Rate',
     ];
 
-    /**
-     * @param string $index
-     *
-     * @return mixed|null
-     */
-    #[\ReturnTypeWillChange]
-    public function offsetGet($index)
+    #[ReturnTypeWillChange]
+    public function offsetGet(mixed $key): mixed
     {
-        if (! $this->offsetExists($index) && array_key_exists($index, $this->defaultValues)) {
-            return $this->defaultValues[$index];
+        if (! $this->offsetExists($key) && array_key_exists($key, $this->defaultValues)) {
+            return $this->defaultValues[$key];
         }
 
-        return parent::offsetGet($index);
+        return parent::offsetGet($key);
     }
 }
